@@ -1,4 +1,4 @@
-# plasticity_avalanche_model
+# plasticity_model
 Repo for simulating spiking network models with plasticity rules to model avalanche dynamics in response to perturbations. 
 
 
