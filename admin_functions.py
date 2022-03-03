@@ -672,7 +672,7 @@ def multi_plot(data_list, col_list, plot_type, size, rows, cols):
         
         
 #=======================================================================================     
-def bar_scatter_plot(dic, data_name, fig_size, bar_size, dot_size, mean_colours, colours):
+def bar_scatter_plot(dic, data_name, fig_size, bar_size, dot_size, colours):
 #=======================================================================================
     """
     Plot a bar and scatter plot with mean and individual data points. 
@@ -683,7 +683,6 @@ def bar_scatter_plot(dic, data_name, fig_size, bar_size, dot_size, mean_colours,
         fig_size (tuple): figure size
         bar_size (float): size of mean bar
         dot_size (float): size of dot
-        mean_colors (list): color of bars
         colours (list): colors of data points
 
     """
@@ -696,12 +695,12 @@ def bar_scatter_plot(dic, data_name, fig_size, bar_size, dot_size, mean_colours,
     
 
     fig, ax = plt.subplots(figsize = fig_size)
-    ax = sns.pointplot(x="condition", y=data_name, data = dic, hue = 'condition', palette = mean_colours, join=True, ci=0, scale=bar_size, markers = '_')
+    ax = sns.pointplot(x="condition", y=data_name, data = dic, hue = 'condition', palette = colours, join=True, ci=0, scale=bar_size, markers = '_')
     for artist in ax.lines:
         artist.set_zorder(10)
     for artist in ax.findobj(PathCollection):
         artist.set_zorder(11)
-    ax = sns.stripplot(x="condition", y=data_name, data = dic,hue = 'subject', palette = colours, size = dot_size, jitter = True ,alpha = 1)
+    ax = sns.stripplot(x="condition", y=data_name, data = dic,hue = 'condition', palette = colours, size = dot_size, jitter = True ,alpha = 1)
 
     plt.yticks(size = 20)
     points = ax.collections
