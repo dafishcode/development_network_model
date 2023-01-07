@@ -329,9 +329,9 @@ def save_shared_files(path, son_path, mode):
     Saves shared modules across different repositories
     
     Inputs:
-    path (string): name of parent path
-    son_path (string): name of code folder 
-    mode (string): define which file to save: 'admin', 'criticality', 'lce', or 'trace'
+    path (string): name of parent path - should be Fcode
+    son_path (string): name of code folder containing module which you have just edited
+    mode (string): define which module to save: 'admin', 'criticality', or 'trace'
     
     """
 
@@ -358,14 +358,10 @@ def save_shared_files(path, son_path, mode):
     if mode == 'criticality':
         file_list = [return_files(path , son_path, 'criticality.py')[0], return_files(path , son_path, 'IS.py')[0], return_files(path, son_path, 'trace_analyse.py')[0]]  #search for admin file in current directory
         path_list = ['criticality', 'avalanche_model', 'mutant_analysis'] #CHANGE AS NEEDED!
-
-    if mode == 'lce':
-        file_list = return_files(path , son_path, 'LCE.py' ) #search for LCE file in current directory
-        path_list = ['empirical_dynamic_modelling', 'seizure_dynamics'] #CHANGE AS NEEDED!
         
     if mode == 'trace':
         file_list = return_files(path , son_path, 'trace_analyse.py' ) #search for trace_analyse file in current directory
-        path_list = ['criticality', 'avalanche_model', 'plasticity_model', 'mutant_analysis'] #CHANGE AS NEEDED!
+        path_list = ['criticality', 'avalanche_model', 'mutant_analysis'] #CHANGE AS NEEDED!
         
         
     loop_dir(file_list, path_list) 
@@ -535,6 +531,26 @@ def timeprint(per, r, numrows, name):
 #=============================
 #=============================
 
+#==============================================
+def autocorr(data, length):
+#==============================================
+    """
+    This function calculates the autocorrelation of a timeseries against itself over successive delays. 
+    
+    Inputs:
+        data (np array): 1d vector timeseries
+        length (int): how many delays to calculate over
+    
+    Returns:
+        1d vector of correlation values of data_t against data_ti
+    
+    """
+    import numpy as np
+        
+    return np.array([1]+[np.corrcoef(data[:-i], data[i:])[0,1]  \
+        for i in range(1, length)])
+    
+
 
 #=======================================================================================
 def window(size, times): #make window of given size that is divisible by time series
@@ -585,9 +601,12 @@ def stats_2samp(data1, data2, alpha, n_comp, mode):
     data1 (np array/list/dataframe): row of dataset 1
     data2 (np array/list/dataframe): row of dataset 2
     alpha (float): significant level
-    n_comp (int): number of comparisons
+    n_comp (int): number of comparisons for bonferroni correction
     mode (str): 'ind' for independent samples, 'rel' for related samples
 
+    Outputs:
+     (float): test statistic
+    p (float): p value
     """
 
     from scipy import stats
@@ -598,23 +617,35 @@ def stats_2samp(data1, data2, alpha, n_comp, mode):
         else:
             print('Samples are significantly different')
     
-    p1, p2 = stats.normaltest(data1)[1], stats.normaltest(data2)[1]
     corrected_alpha = alpha/n_comp
+    if len(data1) >7 and len(data2) > 7:
+        p1, p2 = stats.normaltest(data1)[1], stats.normaltest(data2)[1]
+        if p1 or p2 < alpha:
+            normal = 'no'
+        else:
+            normal = 'yes'
     
-    if p1 or p2 < alpha:
+    else: #if you have less than 8 samples, use non-parametric test
+        normal = 'no'
+        
+    
+    if normal == 'no':
         print('At least one sample is non-Gaussian - performing non-parametric test')
         
         if mode == 'ind':
             U, p = stats.mannwhitneyu(data1, data2)
             print_sig(U,p,corrected_alpha)
             print('U = ' + str(U) +  '   p = ' + str(p))
+            return(U,p)
             
         elif mode == 'rel':
             w, p = stats.wilcoxon(data1, data2)
             print_sig(w,p,corrected_alpha)
             print('w = ' + str(w) +  '   p = ' + str(p))
+            return(w,p)
+        
             
-    else:
+    elif normal == 'yes':
         print('Both samples are Gaussian - performing parametric test')
     
         if mode == 'ind':
@@ -626,6 +657,8 @@ def stats_2samp(data1, data2, alpha, n_comp, mode):
             print_sig(t,p,corrected_alpha)
             
         print('t = ' + str(t) +  '   p = ' + str(p))
+        return(t,p)
+
 
 #=======================================================================
 def mean_distribution(distlist): #Generate mean distribution 
