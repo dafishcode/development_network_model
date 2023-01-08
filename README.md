@@ -1,5 +1,5 @@
-# plasticity_model
-Repo for simulating spiking network models with plasticity rules to model avalanche dynamics in response to perturbations. 
+# development_network_model
+Repo for simulating spiking network models over development to understand mechanisms shaping self organising criticality in the brain. 
 
 NB: this is a work in progress! 
 
